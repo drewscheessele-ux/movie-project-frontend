@@ -73,21 +73,86 @@ function App() {
 
       if (!projectMap.has(key)) {
         projectMap.set(key, {
-          project_id: project.project_id,
-          title: project.title,
-          media_type: project.media_type,
-          release_date: project.release_date,
-          discovered_at: project.discovered_at,
+          project_id:
+            project.project_id,
+
+          title:
+            project.title,
+
+          media_type:
+            project.media_type,
+
+          release_date:
+            project.release_date,
+
+          discovered_at:
+            project.discovered_at,
+
+          poster_path:
+            project.poster_path ?? "",
+
+          overview:
+            project.overview ?? "",
+
+          genres:
+            project.genres ?? [],
+
+          tmdb_url:
+            project.tmdb_url ?? "",
+
           people: [],
         });
       }
 
-      const groupedProject = projectMap.get(key);
+      const groupedProject =
+        projectMap.get(key);
+
+      /*
+      * If one person's record has
+      * richer metadata, use it.
+      */
+
+      if (
+        !groupedProject.poster_path
+        && project.poster_path
+      ) {
+        groupedProject.poster_path =
+          project.poster_path;
+      }
+
+      if (
+        !groupedProject.overview
+        && project.overview
+      ) {
+        groupedProject.overview =
+          project.overview;
+      }
+
+      if (
+        groupedProject.genres.length === 0
+        && project.genres?.length
+      ) {
+        groupedProject.genres =
+          project.genres;
+      }
+
+      if (
+        !groupedProject.tmdb_url
+        && project.tmdb_url
+      ) {
+        groupedProject.tmdb_url =
+          project.tmdb_url;
+      }
 
       groupedProject.people.push({
-        person_id: project.person_id,
-        person_name: project.person_name,
-        roles: project.roles ?? [],
+        person_id:
+          project.person_id,
+
+        person_name:
+          project.person_name,
+
+        roles:
+          project.roles ?? [],
       });
 
       if (
@@ -99,11 +164,14 @@ function App() {
       }
     }
 
-    return Array.from(projectMap.values()).sort(
+    return Array.from(
+      projectMap.values()
+    ).sort(
       (a, b) =>
-        (b.discovered_at ?? "").localeCompare(
-          a.discovered_at ?? ""
-        )
+        (b.discovered_at ?? "")
+          .localeCompare(
+            a.discovered_at ?? ""
+          )
     );
   }, [projects]);
 
@@ -143,6 +211,19 @@ function App() {
         .includes(query)
     );
   }, [people, search]);
+
+  function getPosterUrl(
+    posterPath
+  ) {
+    if (!posterPath) {
+      return "";
+    }
+
+    return (
+      "https://image.tmdb.org/t/p/w500"
+      + posterPath
+    );
+  }
 
   function formatDate(date) {
     if (!date) {
@@ -301,49 +382,98 @@ function App() {
                       className="project-card"
                       key={`${project.media_type}-${project.project_id}`}
                     >
-                      <div className="project-top">
-                        <span className="type-badge">
-                          {project.media_type ===
-                          "tv"
-                            ? "TV"
-                            : "MOVIE"}
-                        </span>
-
-                        <span className="release-date">
-                          {formatDate(
-                            project.release_date
-                          )}
-                        </span>
+                      <div className="poster-container">
+                        {project.poster_path ? (
+                          <img
+                            className="project-poster"
+                            src={getPosterUrl(
+                              project.poster_path
+                            )}
+                            alt={`${project.title} poster`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="poster-placeholder">
+                            <span>No poster</span>
+                          </div>
+                        )}
                       </div>
 
-                      <h2>{project.title}</h2>
+                      <div className="project-content">
 
-                      <div className="people-list">
-                        {project.people.map(
-                          (person) => (
-                            <div
-                              className="person-credit"
-                              key={
-                                person.person_id
-                              }
-                            >
-                              <strong>
-                                {
-                                  person.person_name
-                                }
-                              </strong>
+                        <div className="project-top">
+                          <span className="type-badge">
+                            {project.media_type === "tv"
+                              ? "TV"
+                              : "MOVIE"}
+                          </span>
 
-                              {person.roles.length >
-                                0 && (
-                                <span>
-                                  {person.roles.join(
-                                    ", "
-                                  )}
+                          <span className="release-date">
+                            {formatDate(
+                              project.release_date
+                            )}
+                          </span>
+                        </div>
+
+                        <h2>{project.title}</h2>
+
+                        {project.genres?.length > 0 && (
+                          <div className="genre-list">
+                            {project.genres.map(
+                              (genre) => (
+                                <span
+                                  className="genre"
+                                  key={genre}
+                                >
+                                  {genre}
                                 </span>
-                              )}
-                            </div>
-                          )
+                              )
+                            )}
+                          </div>
                         )}
+
+                        {project.overview && (
+                          <p className="overview">
+                            {project.overview}
+                          </p>
+                        )}
+
+                        <div className="people-list">
+
+                          {project.people.map(
+                            (person) => (
+                              <div
+                                className="person-credit"
+                                key={person.person_id}
+                              >
+                                <strong>
+                                  {person.person_name}
+                                </strong>
+
+                                {person.roles.length > 0 && (
+                                  <span>
+                                    {person.roles.join(
+                                      ", "
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          )}
+
+                        </div>
+
+                        {project.tmdb_url && (
+                          <a
+                            className="tmdb-link"
+                            href={project.tmdb_url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View on TMDB →
+                          </a>
+                        )}
+
                       </div>
                     </article>
                   )
@@ -403,8 +533,15 @@ function App() {
       </main>
 
       <footer>
-        Movie Project Tracker · AWS serverless
-        learning project
+        <div>
+          Movie Project Tracker · AWS serverless
+          learning project
+        </div>
+
+        <div className="tmdb-credit">
+          This product uses the TMDB API but is not
+          endorsed or certified by TMDB.
+        </div>
       </footer>
     </div>
   );
