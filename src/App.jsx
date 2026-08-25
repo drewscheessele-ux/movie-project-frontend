@@ -175,7 +175,7 @@ function App() {
             AWS SERVERLESS PROJECT
           </p>
 
-          <h1>Project Tracker</h1>
+          <h1>Movie Project Tracker</h1>
 
           <p className="subtitle">
             Automatically tracking movie and
