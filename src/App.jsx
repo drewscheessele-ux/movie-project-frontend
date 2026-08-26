@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import ManagementPanel
+  from "./ManagementPanel";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 console.log("API URL:", API_BASE_URL);
@@ -1017,6 +1019,14 @@ function App() {
               )}
             </section>
           )}
+          {!error &&
+            !loading &&
+            activeTab === "people" && (
+              <ManagementPanel
+                people={people}
+                onChanged={loadData}
+              />
+            )}
       </main>
 
       <footer>

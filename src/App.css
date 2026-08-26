@@ -596,3 +596,259 @@ footer {
   font-size: 0.72rem;
   color: #5f6572;
 }
+
+.management-shell {
+  margin-top: 28px;
+
+  border: 1px solid #292c35;
+  border-radius: 14px;
+
+  background: #16181d;
+
+  overflow: hidden;
+}
+
+.management-shell > summary {
+  padding: 18px 20px;
+
+  cursor: pointer;
+
+  color: #c8ccd5;
+
+  font-weight: 600;
+
+  list-style-position: inside;
+}
+
+.management-shell > summary:hover {
+  background: #1b1e24;
+}
+
+.management-auth {
+  padding: 20px;
+
+  border-top: 1px solid #292c35;
+}
+
+.admin-controls {
+  display: flex;
+  flex-direction: column;
+
+  gap: 22px;
+}
+
+.admin-header {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: flex-start;
+
+  gap: 20px;
+}
+
+.admin-header h3 {
+  margin: 5px 0;
+}
+
+.admin-header p {
+  margin: 0;
+
+  color: #808796;
+
+  font-size: 0.8rem;
+}
+
+.admin-label {
+  color: #80d9a4;
+
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+}
+
+.add-person-form {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr auto;
+
+  gap: 12px;
+
+  align-items: end;
+
+  padding: 18px;
+
+  border: 1px solid #292c35;
+  border-radius: 10px;
+
+  background: #121419;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.admin-field label {
+  color: #818897;
+
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.admin-field input {
+  width: 100%;
+
+  padding: 10px 11px;
+
+  border: 1px solid #30343f;
+  border-radius: 8px;
+
+  background: #1b1e24;
+
+  color: white;
+
+  outline: none;
+}
+
+.admin-field input:focus {
+  border-color: #6f7cff;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  padding: 9px 13px;
+
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 0.8rem;
+
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+
+  background: #6676ff;
+
+  color: white;
+}
+
+.secondary-button {
+  border: 1px solid #383c47;
+
+  background: #1c1f26;
+
+  color: #d7dae1;
+}
+
+.danger-button {
+  border: 1px solid #553339;
+
+  background: #261a1d;
+
+  color: #e9929f;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  opacity: 0.55;
+
+  cursor: default;
+}
+
+.admin-message {
+  padding: 11px 13px;
+
+  border-radius: 8px;
+
+  font-size: 0.82rem;
+}
+
+.admin-message.success {
+  background: #18271e;
+
+  color: #83dca5;
+
+  border: 1px solid #294334;
+}
+
+.admin-message.error {
+  background: #29191c;
+
+  color: #eb929d;
+
+  border: 1px solid #4b292f;
+}
+
+.admin-people-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-person-row {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 14px 0;
+
+  border-bottom:
+    1px solid #292c35;
+}
+
+.admin-person-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-person-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.admin-person-row span {
+  color: #747b8b;
+
+  font-size: 0.73rem;
+}
+
+.admin-actions {
+  display: flex;
+
+  gap: 8px;
+}
+
+
+@media (max-width: 700px) {
+
+  .add-person-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header,
+  .admin-person-row {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .admin-actions {
+    justify-content: flex-end;
+  }
+
+}
