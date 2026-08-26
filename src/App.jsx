@@ -11,6 +11,13 @@ function App() {
   const [activeTab, setActiveTab] = useState("projects");
   const [search, setSearch] = useState("");
 
+  const [mediaFilter, setMediaFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [personFilter, setPersonFilter] = useState("all");
+  const [genreFilter, setGenreFilter] = useState("all");
+
+  const [sortBy, setSortBy] = useState("discovered-desc");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -103,9 +110,39 @@ function App() {
           people: [],
         });
       }
-
+      
       const groupedProject =
         projectMap.get(key);
+
+  const projectPeople = useMemo(() => {
+    const names = new Set();
+
+    for (const project of groupedProjects) {
+      for (const person of project.people) {
+        if (person.person_name) {
+          names.add(person.person_name);
+        }
+      }
+    }
+
+    return Array.from(names).sort(
+      (a, b) => a.localeCompare(b)
+    );
+  }, [groupedProjects]);  
+  
+  const projectGenres = useMemo(() => {
+    const genres = new Set();
+
+    for (const project of groupedProjects) {
+      for (const genre of project.genres ?? []) {
+        genres.add(genre);
+      }
+    }
+
+    return Array.from(genres).sort(
+      (a, b) => a.localeCompare(b)
+    );
+  }, [groupedProjects]);
 
       /*
       * If one person's record has
@@ -176,27 +213,224 @@ function App() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const query = search
+      .toLowerCase()
+      .trim();
 
-    if (!query) {
-      return groupedProjects;
-    }
+    const today = getTodayIso();
 
-    return groupedProjects.filter((project) => {
-      const titleMatch = project.title
-        ?.toLowerCase()
-        .includes(query);
+    let results = groupedProjects.filter(
+      (project) => {
 
-      const personMatch = project.people.some(
-        (person) =>
-          person.person_name
-            ?.toLowerCase()
-            .includes(query)
-      );
+        // ------------------------
+        // Search
+        // ------------------------
 
-      return titleMatch || personMatch;
-    });
-  }, [groupedProjects, search]);
+        if (query) {
+          const titleMatch =
+            project.title
+              ?.toLowerCase()
+              .includes(query);
+
+          const personMatch =
+            project.people.some(
+              (person) =>
+                person.person_name
+                  ?.toLowerCase()
+                  .includes(query)
+            );
+
+          if (
+            !titleMatch &&
+            !personMatch
+          ) {
+            return false;
+          }
+        }
+
+
+        // ------------------------
+        // Movie / TV filter
+        // ------------------------
+
+        if (
+          mediaFilter !== "all" &&
+          project.media_type !== mediaFilter
+        ) {
+          return false;
+        }
+
+
+        // ------------------------
+        // Release status filter
+        // ------------------------
+
+        if (statusFilter !== "all") {
+
+          if (!project.release_date) {
+            if (
+              statusFilter !== "unknown"
+            ) {
+              return false;
+            }
+          }
+
+          else if (
+            statusFilter === "upcoming" &&
+            project.release_date <= today
+          ) {
+            return false;
+          }
+
+          else if (
+            statusFilter === "released" &&
+            project.release_date > today
+          ) {
+            return false;
+          }
+
+          else if (
+            statusFilter === "unknown"
+          ) {
+            return false;
+          }
+        }
+
+
+        // ------------------------
+        // Person filter
+        // ------------------------
+
+        if (personFilter !== "all") {
+
+          const hasPerson =
+            project.people.some(
+              (person) =>
+                person.person_name ===
+                personFilter
+            );
+
+          if (!hasPerson) {
+            return false;
+          }
+        }
+
+
+        // ------------------------
+        // Genre filter
+        // ------------------------
+
+        if (genreFilter !== "all") {
+
+          const hasGenre =
+            project.genres?.includes(
+              genreFilter
+            );
+
+          if (!hasGenre) {
+            return false;
+          }
+        }
+
+
+        return true;
+      }
+    );
+
+
+    // ------------------------
+    // Sorting
+    // ------------------------
+
+    results = [...results].sort(
+      (a, b) => {
+
+        if (
+          sortBy ===
+          "discovered-desc"
+        ) {
+          return (
+            b.discovered_at ?? ""
+          ).localeCompare(
+            a.discovered_at ?? ""
+          );
+        }
+
+        if (
+          sortBy ===
+          "release-asc"
+        ) {
+
+          if (
+            !a.release_date &&
+            !b.release_date
+          ) {
+            return 0;
+          }
+
+          if (!a.release_date) {
+            return 1;
+          }
+
+          if (!b.release_date) {
+            return -1;
+          }
+
+          return a.release_date.localeCompare(
+            b.release_date
+          );
+        }
+
+        if (
+          sortBy ===
+          "release-desc"
+        ) {
+
+          if (
+            !a.release_date &&
+            !b.release_date
+          ) {
+            return 0;
+          }
+
+          if (!a.release_date) {
+            return 1;
+          }
+
+          if (!b.release_date) {
+            return -1;
+          }
+
+          return b.release_date.localeCompare(
+            a.release_date
+          );
+        }
+
+        if (
+          sortBy === "title-asc"
+        ) {
+          return (
+            a.title ?? ""
+          ).localeCompare(
+            b.title ?? ""
+          );
+        }
+
+        return 0;
+      }
+    );
+
+    return results;
+
+  }, [
+    groupedProjects,
+    search,
+    mediaFilter,
+    statusFilter,
+    personFilter,
+    genreFilter,
+    sortBy
+  ]);
 
   const filteredPeople = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -225,6 +459,22 @@ function App() {
     );
   }
 
+  function getTodayIso() {
+    const today = new Date();
+
+    const year = today.getFullYear();
+
+    const month = String(
+      today.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+      today.getDate()
+    ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
   function formatDate(date) {
     if (!date) {
       return "Release date unknown";
@@ -246,6 +496,22 @@ function App() {
         day: "numeric",
       }
     );
+  }
+
+  function getReleaseStatus(
+    releaseDate
+  ) {
+    if (!releaseDate) {
+      return "unknown";
+    }
+
+    const today = getTodayIso();
+
+    if (releaseDate > today) {
+      return "upcoming";
+    }
+
+    return "released";
   }
 
   return (
@@ -327,6 +593,206 @@ function App() {
               People
             </button>
           </div>
+
+    {activeTab === "projects" && (
+      <section className="filters">
+
+        <div className="filter-control">
+          <label htmlFor="media-filter">
+            Type
+          </label>
+
+          <select
+            id="media-filter"
+            value={mediaFilter}
+            onChange={(event) =>
+              setMediaFilter(
+                event.target.value
+              )
+            }
+          >
+            <option value="all">
+              All
+            </option>
+
+            <option value="movie">
+              Movies
+            </option>
+
+            <option value="tv">
+              TV
+            </option>
+          </select>
+        </div>
+
+
+        <div className="filter-control">
+          <label htmlFor="status-filter">
+            Status
+          </label>
+
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(
+                event.target.value
+              )
+            }
+          >
+            <option value="all">
+              All
+            </option>
+
+            <option value="upcoming">
+              Upcoming
+            </option>
+
+            <option value="released">
+              Released
+            </option>
+
+            <option value="unknown">
+              No release date
+            </option>
+          </select>
+        </div>
+
+
+        <div className="filter-control">
+          <label htmlFor="person-filter">
+            Person
+          </label>
+
+          <select
+            id="person-filter"
+            value={personFilter}
+            onChange={(event) =>
+              setPersonFilter(
+                event.target.value
+              )
+            }
+          >
+            <option value="all">
+              Everyone
+            </option>
+
+            {projectPeople.map(
+              (personName) => (
+                <option
+                  value={personName}
+                  key={personName}
+                >
+                  {personName}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+
+        <div className="filter-control">
+          <label htmlFor="genre-filter">
+            Genre
+          </label>
+
+          <select
+            id="genre-filter"
+            value={genreFilter}
+            onChange={(event) =>
+              setGenreFilter(
+                event.target.value
+              )
+            }
+          >
+            <option value="all">
+              All genres
+            </option>
+
+            {projectGenres.map(
+              (genre) => (
+                <option
+                  value={genre}
+                  key={genre}
+                >
+                  {genre}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+
+        <div className="filter-control sort-control">
+          <label htmlFor="sort-filter">
+            Sort by
+          </label>
+
+          <select
+            id="sort-filter"
+            value={sortBy}
+            onChange={(event) =>
+              setSortBy(
+                event.target.value
+              )
+            }
+          >
+            <option value="discovered-desc">
+              Recently discovered
+            </option>
+
+            <option value="release-asc">
+              Release date: soonest
+            </option>
+
+            <option value="release-desc">
+              Release date: latest
+            </option>
+
+            <option value="title-asc">
+              Title: A–Z
+            </option>
+          </select>
+        </div>
+
+      </section>
+    )}
+
+    <div className="filter-actions">
+
+      <button
+        className="clear-filters"
+        onClick={() => {
+          setMediaFilter("all");
+          setStatusFilter("all");
+          setPersonFilter("all");
+          setGenreFilter("all");
+          setSortBy(
+            "discovered-desc"
+          );
+          setSearch("");
+        }}
+      >
+        Clear filters
+      </button>
+
+    </div>
+
+    {activeTab === "projects" && (
+      <div className="results-summary">
+
+        Showing{" "}
+        <strong>
+          {filteredProjects.length}
+        </strong>{" "}
+        of{" "}
+        <strong>
+          {groupedProjects.length}
+        </strong>{" "}
+        projects
+
+      </div>
+    )}
 
           <input
             className="search"
@@ -413,6 +879,26 @@ function App() {
                               project.release_date
                             )}
                           </span>
+                          <span
+                            className={
+                              `status-badge ${
+                                getReleaseStatus(
+                                  project.release_date
+                                )
+                              }`
+                            }
+                          >
+                            {getReleaseStatus(
+                              project.release_date
+                            ) === "upcoming"
+                              ? "Upcoming"
+                              : getReleaseStatus(
+                                  project.release_date
+                                ) === "released"
+                              ? "Released"
+                              : "Date TBD"}
+                          </span>
+
                         </div>
 
                         <h2>{project.title}</h2>
