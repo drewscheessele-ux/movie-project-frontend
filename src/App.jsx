@@ -114,36 +114,6 @@ function App() {
       const groupedProject =
         projectMap.get(key);
 
-  const projectPeople = useMemo(() => {
-    const names = new Set();
-
-    for (const project of groupedProjects) {
-      for (const person of project.people) {
-        if (person.person_name) {
-          names.add(person.person_name);
-        }
-      }
-    }
-
-    return Array.from(names).sort(
-      (a, b) => a.localeCompare(b)
-    );
-  }, [groupedProjects]);  
-  
-  const projectGenres = useMemo(() => {
-    const genres = new Set();
-
-    for (const project of groupedProjects) {
-      for (const genre of project.genres ?? []) {
-        genres.add(genre);
-      }
-    }
-
-    return Array.from(genres).sort(
-      (a, b) => a.localeCompare(b)
-    );
-  }, [groupedProjects]);
-
       /*
       * If one person's record has
       * richer metadata, use it.
@@ -211,6 +181,37 @@ function App() {
           )
     );
   }, [projects]);
+
+  const projectPeople = useMemo(() => {
+    const names = new Set();
+
+    for (const project of groupedProjects) {
+      for (const person of project.people) {
+        if (person.person_name) {
+          names.add(person.person_name);
+        }
+      }
+    }
+
+    return Array.from(names).sort(
+      (a, b) => a.localeCompare(b)
+    );
+  }, [groupedProjects]);
+
+
+  const projectGenres = useMemo(() => {
+    const genres = new Set();
+
+    for (const project of groupedProjects) {
+      for (const genre of project.genres ?? []) {
+        genres.add(genre);
+      }
+    }
+
+    return Array.from(genres).sort(
+      (a, b) => a.localeCompare(b)
+    );
+  }, [groupedProjects]);
 
   const filteredProjects = useMemo(() => {
     const query = search
