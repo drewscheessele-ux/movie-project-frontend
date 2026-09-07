@@ -23,6 +23,106 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [nextCursor, setNextCursor] =
+    useState(null);
+
+  const [loadingMore, setLoadingMore] =
+    useState(false);
+
+  async function loadMoreProjects() {
+    if (
+      !nextCursor
+      || loadingMore
+    ) {
+      return;
+    }
+
+    setLoadingMore(true);
+
+    try {
+      const url =
+        new URL(
+          `${API_BASE_URL}/projects`
+        );
+
+      url.searchParams.set(
+        "limit",
+        "24"
+      );
+
+      url.searchParams.set(
+        "cursor",
+        nextCursor
+      );
+
+      const response =
+        await fetch(
+          url.toString()
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          "Could not load more projects."
+        );
+      }
+
+      const data =
+        await response.json();
+
+      setProjects(
+        (currentProjects) => {
+
+          /*
+          * Prevent accidental duplicates if
+          * a request is repeated.
+          */
+          const projectMap =
+            new Map();
+
+          for (
+            const project
+            of currentProjects
+          ) {
+            projectMap.set(
+              project.tracking_id,
+              project
+            );
+          }
+
+          for (
+            const project
+            of data.projects ?? []
+          ) {
+            projectMap.set(
+              project.tracking_id,
+              project
+            );
+          }
+
+          return Array.from(
+            projectMap.values()
+          );
+        }
+      );
+
+      setNextCursor(
+        data.next_cursor ?? null
+      );
+
+    }
+
+    catch (err) {
+      console.error(
+        "Load more failed:",
+        err
+      );
+    }
+
+    finally {
+      setLoadingMore(false);
+    }
+  }
+
   async function loadData() {
     try {
       setLoading(true);
@@ -30,7 +130,9 @@ function App() {
 
       const [projectsResponse, peopleResponse] =
         await Promise.all([
-          fetch(`${API_BASE_URL}/projects`),
+          fetch(
+            `${API_BASE_URL}/projects?limit=24`
+          ),
           fetch(`${API_BASE_URL}/people`),
         ]);
 
@@ -50,6 +152,9 @@ function App() {
       const peopleData = await peopleResponse.json();
 
       setProjects(projectsData.projects ?? []);
+      setNextCursor(
+        projectsData.next_cursor ?? null
+      );
       setPeople(peopleData.people ?? []);
     } catch (err) {
       console.error(err);
@@ -926,7 +1031,6 @@ function App() {
                             {project.overview}
                           </p>
                         )}
-
                         <div className="people-list">
 
                           {project.people.map(
@@ -952,6 +1056,7 @@ function App() {
 
                         </div>
 
+
                         {project.tmdb_url && (
                           <a
                             className="tmdb-link"
@@ -970,7 +1075,26 @@ function App() {
               )}
             </section>
           )}
+                    {activeTab === "projects" &&
+                      nextCursor && (
+                        <div className="load-more-container">
 
+                          <button
+                            className="load-more-button"
+                            onClick={
+                              loadMoreProjects
+                            }
+                            disabled={
+                              loadingMore
+                            }
+                          >
+                            {loadingMore
+                              ? "Loading..."
+                              : "Load more projects"}
+                          </button>
+
+                        </div>
+                      )}
         {!error &&
           !loading &&
           activeTab === "people" && (
